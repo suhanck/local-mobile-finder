@@ -11,9 +11,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 
-app.get('/api/auth/test', (req, res) => {
-    res.json({ message: 'Auth route is working!' });
-});
+
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
