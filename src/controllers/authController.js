@@ -1,6 +1,7 @@
 
 const pool = require('../config/db');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const register = async (req, res) => {
     try {
@@ -57,4 +58,72 @@ const register = async (req, res) => {
     }
 };
 
-module.exports = { register };
+
+
+
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // 1. Validate input
+        if (!email || !password) {
+            return res.status(400).json({
+                error: 'Email and password are required'
+            });
+        }
+
+        // 2. Find owner by email
+        const result = await pool.query(
+            'SELECT * FROM owners WHERE email = $1',
+            [email]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({
+                error: 'Invalid email or password'
+            });
+        }
+
+        const owner = result.rows[0];
+
+        // 3. Compare the password with the stored hash
+        const match = await bcrypt.compare(
+            password,
+            owner.password_hash
+        );
+
+        if (!match) {
+            return res.status(401).json({
+                error: 'Invalid email or password'
+            });
+        }
+
+        // 4. Create a JWT token
+        const token = jwt.sign(
+            { id: owner.id, email: owner.email },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        );
+
+        // 5. Return token and safe owner details
+        return res.status(200).json({
+            message: 'Login successful',
+            token,
+            owner: {
+                id: owner.id,
+                name: owner.name,
+                email: owner.email
+            }
+        });
+
+    } catch (error) {
+        console.error('Login error:', error.message);
+
+        return res.status(500).json({
+            error: 'Internal server error'
+        });
+    }
+};
+
+
+module.exports = { register, login };
