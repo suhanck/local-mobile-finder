@@ -15,6 +15,8 @@ app.use('/api/shops', require('./src/routes/shopRoutes'));
 
 app.use('/api/owner/listings', require('./src/routes/listingRoutes'));
 
+app.use('/api/phones', require('./src/routes/phoneRoutes'));
+
 
 
 app.get('/api/health', (req, res) => {
